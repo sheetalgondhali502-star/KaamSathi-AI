@@ -54,11 +54,10 @@ Requirements:
 - Git
 
 ```bash
-git clone https://github.com/sheetalgondhali502-star/kaamsathi-factory-assistant.git
-cd kaamsathi-factory-assistant
+git clone https://github.com/sheetalgondhali502-star/KaamSathi-AI.git
+cd KaamSathi-AI
 bun install
 bun run dev
-```
 
 ## 🐳 Run with Docker
 
