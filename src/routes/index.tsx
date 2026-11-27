@@ -34,20 +34,25 @@ type SR = {
 };
 
 const ERRORS: Record<string, string> = {
-  "not-allowed": "Microphone permission was denied. Allow microphone access in your browser, or type your report below.",
-  "no-speech": "No speech heard. Please tap the microphone and speak again.",
-  "audio-capture": "No microphone found. Please connect one or type your report.",
-  network: "Speech service could not be reached (your browser needs internet for voice). Please type your report.",
-  "language-not-supported": "This browser does not support voice in the selected language. Try English or type your report.",
+  "not-allowed": "Microphone permission was denied. Click the lock/microphone icon in the address bar, allow the microphone, then press Start Listening again. You can also type your report below.",
+  "service-not-allowed": "This browser blocked its speech service for this page. Please type your report below, or try Google Chrome or Microsoft Edge.",
+  "no-speech": "No speech was heard. Press Start Listening and speak clearly close to the microphone.",
+  "audio-capture": "No working microphone was found. Please connect a microphone, or type your report below.",
+  network: "Network error: the browser's speech service could not be reached. Voice needs an internet connection. Please check your connection or type your report below.",
+  "language-not-supported": "Voice is not supported for the selected language in this browser. Choose English, or type your report below.",
 };
+
+type VoiceState = "idle" | "starting" | "listening" | "stopping";
 
 function WorkerPage() {
   const [supported, setSupported] = useState<boolean | null>(null);
   const [lang, setLang] = useState("en-IN");
-  const [listening, setListening] = useState(false);
+  const [voice, setVoice] = useState<VoiceState>("idle");
+  const listening = voice !== "idle";
   const [transcript, setTranscript] = useState("");
   const [interim, setInterim] = useState("");
   const [error, setError] = useState("");
+  const [heard, setHeard] = useState<string | null>(null);
   const [draft, setDraft] = useState<Extracted | null>(null);
   const [reporter, setReporter] = useState("");
   const [saved, setSaved] = useState(false);
@@ -55,33 +60,64 @@ function WorkerPage() {
 
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>;
-    setSupported(Boolean(w["SpeechRecognition"] ?? w["webkitSpeechRecognition"]));
+    setSupported(Boolean(w["SpeechRecognition"] ?? w["webkitSpeechRecognition"]) && window.isSecureContext);
     setReporter(localStorage.getItem("kaamsathi.reporter") ?? "");
+    return () => { recRef.current?.stop(); recRef.current = null; };
   }, []);
 
-  function start() {
+  async function start() {
     const w = window as unknown as Record<string, unknown>;
     const Ctor = (w["SpeechRecognition"] ?? w["webkitSpeechRecognition"]) as (new () => SR) | undefined;
-    if (!Ctor) return;
-    setError(""); setSaved(false); setInterim("");
+    if (!Ctor || listening) return;
+    setError(""); setSaved(false); setInterim(""); setHeard(null);
+    if (!navigator.onLine) { setError(ERRORS["network"] ?? ""); return; }
+    setVoice("starting");
+    // Ask for microphone access first so permission problems get a clear message.
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((t) => t.stop());
+    } catch (err) {
+      const name = err instanceof DOMException ? err.name : "";
+      setError(name === "NotFoundError" ? (ERRORS["audio-capture"] ?? "") : (ERRORS["not-allowed"] ?? ""));
+      setVoice("idle");
+      return;
+    }
     const rec = new Ctor();
     rec.lang = lang; rec.continuous = true; rec.interimResults = true;
+    let recognized = "";
     rec.onresult = (e) => {
+      if (recRef.current !== rec) return;
       let fin = ""; let tmp = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
         const t = r?.[0]?.transcript ?? "";
         if (r?.isFinal) fin += t; else tmp += t;
       }
-      if (fin) setTranscript((p) => (p ? p + " " : "") + fin.trim());
+      const clean = fin.trim();
+      if (clean) {
+        recognized = (recognized + " " + clean).trim();
+        setTranscript((p) => (p.trim() ? p.trim() + " " : "") + clean);
+      }
       setInterim(tmp);
     };
-    rec.onerror = (e) => { setError(ERRORS[e.error] ?? `Voice input error: ${e.error}. Please type your report instead.`); setListening(false); };
-    rec.onend = () => { setListening(false); setInterim(""); };
-    try { rec.start(); recRef.current = rec; setListening(true); }
-    catch { setError("Could not start the microphone. Please try again or type your report."); }
+    rec.onerror = (e) => {
+      if (recRef.current !== rec || e.error === "aborted") return;
+      setError(ERRORS[e.error] ?? `Voice input stopped (${e.error}). Please try again or type your report below.`);
+    };
+    rec.onend = () => {
+      if (recRef.current !== rec) return;
+      recRef.current = null;
+      setVoice("idle"); setInterim("");
+      setHeard(recognized || null);
+    };
+    try { recRef.current = rec; rec.start(); setVoice("listening"); }
+    catch { recRef.current = null; setVoice("idle"); setError("Could not start voice input. Please try again or type your report below."); }
   }
-  function stop() { recRef.current?.stop(); setListening(false); }
+  function stop() {
+    if (!recRef.current) { setVoice("idle"); return; }
+    setVoice("stopping");
+    recRef.current.stop();
+  }
 
   function analyse() {
     if (!transcript.trim()) { setError("Please speak or type what the problem is first."); return; }
@@ -139,13 +175,30 @@ function WorkerPage() {
           </div>
         ) : (
           <>
-            <button onClick={listening ? stop : start} disabled={supported === null}
+            <button onClick={listening ? stop : start} disabled={supported === null || voice === "starting" || voice === "stopping"}
               aria-label={listening ? "Stop recording" : "Start recording"}
-              className={`mx-auto grid h-40 w-40 sm:h-48 sm:w-48 place-items-center rounded-full shadow-xl transition-transform active:scale-95 ${listening ? "animate-pulse bg-destructive text-destructive-foreground" : "bg-accent text-accent-foreground hover:scale-105"}`}>
+              className={`mx-auto grid h-40 w-40 sm:h-48 sm:w-48 place-items-center rounded-full shadow-xl transition-transform active:scale-95 disabled:opacity-70 ${listening ? "animate-pulse bg-destructive text-destructive-foreground" : "bg-accent text-accent-foreground hover:scale-105"}`}>
               {listening ? <MicOff className="h-20 w-20" /> : <Mic className="h-20 w-20" />}
             </button>
-            <p className="mt-4 text-lg font-semibold">{listening ? "Listening… tap to stop" : "Tap to speak"}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Uses your browser's built-in speech recognition. Language support depends on the browser.</p>
+            <p className="mt-4 text-lg font-semibold" aria-live="polite">
+              {voice === "starting" ? "Starting microphone…" : voice === "listening" ? `Listening in ${LANGS.find((l) => l.code === lang)?.label ?? lang}… speak now` : voice === "stopping" ? "Stopping…" : "Press Start Listening and speak"}
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-3">
+              <button onClick={() => void start()} disabled={supported === null || listening}
+                className="inline-flex min-h-14 items-center gap-2 rounded-xl bg-accent px-6 text-lg font-bold text-accent-foreground hover:bg-accent/90 disabled:opacity-50">
+                <Mic className="h-5 w-5" /> Start Listening
+              </button>
+              <button onClick={stop} disabled={voice !== "listening"}
+                className="inline-flex min-h-14 items-center gap-2 rounded-xl border-2 border-border bg-card px-6 text-lg font-bold hover:bg-muted disabled:opacity-50">
+                <MicOff className="h-5 w-5" /> Stop Listening
+              </button>
+            </div>
+            {heard && !listening && (
+              <p role="status" className="mt-4 flex items-center justify-center gap-2 font-semibold text-success">
+                <CheckCircle2 className="h-5 w-5" /> Voice recognized and added to the text box below.
+              </p>
+            )}
+            <p className="mt-3 text-xs text-muted-foreground">Uses your browser's built-in speech recognition (needs internet). Hindi, Kannada and Marathi work only where your browser supports them. You can always type instead.</p>
           </>
         )}
       </section>
