@@ -11,7 +11,7 @@ Workers can report issues without typing long messages. Supervisors can view sub
 
 ## 🎯 Problem Statement
 
-Factory workers often face difficulties reporting machine problems during busy production hours. Manual reporting can consume time and important information may be missed.
+Factory workers often face difficulties reporting machine problems during busy production hours. Manual reporting can consume time, and important information may be missed.
 
 ## 💡 Our Solution
 
@@ -38,6 +38,7 @@ KaamSathi AI provides:
 - TanStack Start
 - Tailwind CSS
 - Browser Speech Recognition
+- Supabase
 - Bun
 - Docker
 
@@ -49,38 +50,49 @@ Issue details are extracted using keyword-based rules.
 
 ## ▶️ Run Locally
 
-Requirements:
+### Requirements
+
 - Bun
 - Git
+
+### Steps
 
 ```bash
 git clone https://github.com/sheetalgondhali502-star/KaamSathi-AI.git
 cd KaamSathi-AI
 bun install
 bun run dev
+```
+
+Open the application at:
+
+http://localhost:3000
 
 ## 🐳 Run with Docker
+
+Make sure Docker is installed and running.
 
 ```bash
 docker compose up --build
 ```
 
-Open:
+Open the application at:
 
 http://localhost:3000
 
 ## 🔐 Data Storage
 
-The application includes browser-based storage functionality. Cloud storage availability depends on the configured Supabase integration.
+KaamSathi AI includes Supabase integration for shared cloud storage.
+
+If Supabase is unavailable or not configured, the application can use browser-based local storage as a fallback.
 
 ## 🌟 Project Goal
 
-Our goal is to make factory communication simpler, faster and more accessible through voice technology.
+Our goal is to make factory communication simpler, faster, and more accessible through voice technology.
 
 ## 👩‍💻 Built for
 
 India Runs on Voice Hackathon 2026
 
 **Project Name: KaamSathi AI**
-
 
