@@ -1,0 +1,8 @@
+
+services:
+  kaamsathi-ai:
+    build: .
+    container_name: kaamsathi-ai
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
