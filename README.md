@@ -1,37 +1,87 @@
-# Welcome to your Lovable project
 
-This project was built with [Lovable](https://lovable.dev).
+# KaamSathi AI 🏭🎙️
 
-## Build with Lovable
+### A Multilingual Voice-First Factory Assistant for Indian MSMEs
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## 🚀 About the Project
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+KaamSathi AI is a voice-first factory assistant designed to help factory workers report machine problems and production issues easily using their voice.
 
-## Development
+Workers can report issues without typing long messages. Supervisors can view submitted reports through a dashboard and monitor reported problems.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## 🎯 Problem Statement
 
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+Factory workers often face difficulties reporting machine problems during busy production hours. Manual reporting can consume time and important information may be missed.
 
-## Built with
+## 💡 Our Solution
 
-- TanStack Start
-- TypeScript
+KaamSathi AI provides:
+
+- Voice-based issue reporting.
+- Simple worker-friendly interface.
+- Machine and issue detail extraction.
+- Worker confirmation before submission.
+- Supervisor dashboard.
+- Report status monitoring.
+
+## 👷 Target Users
+
+- Factory workers
+- Production supervisors
+- Maintenance teams
+- Small and medium manufacturing industries (MSMEs)
+
+## ⚙️ Technology Stack
+
 - React
+- TypeScript
+- TanStack Start
 - Tailwind CSS
+- Browser Speech Recognition
+- Bun
+- Docker
 
-## KaamSathi AI – run with Docker
+## 🗣️ Voice Technology
+
+The application uses browser-based speech recognition where supported. It also provides text input as a fallback.
+
+Issue details are extracted using keyword-based rules.
+
+## ▶️ Run Locally
+
+Requirements:
+- Bun
+- Git
 
 ```bash
-docker build -t kaamsathi-ai .
-docker run -p 3000:3000 kaamsathi-ai
+git clone https://github.com/sheetalgondhali502-star/kaamsathi-factory-assistant.git
+cd kaamsathi-factory-assistant
+bun install
+bun run dev
 ```
-Open http://localhost:3000. No API keys or paid services are required: voice uses the browser's built-in speech recognition (best in Chrome/Edge), report details are extracted with keyword rules, and reports are stored in the browser's local storage.
+
+## 🐳 Run with Docker
+
+```bash
+docker compose up --build
+```
+
+Open:
+
+http://localhost:3000
+
+## 🔐 Data Storage
+
+The application includes browser-based storage functionality. Cloud storage availability depends on the configured Supabase integration.
+
+## 🌟 Project Goal
+
+Our goal is to make factory communication simpler, faster and more accessible through voice technology.
+
+## 👩‍💻 Built for
+
+India Runs on Voice Hackathon 2026
+
+**Project Name: KaamSathi AI**
+
+
