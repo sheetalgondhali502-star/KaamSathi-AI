@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## KaamSathi AI rules
+- Reports persist in browser localStorage (src/lib/reports.ts) — user explicitly asked for no backend/API keys.
+- Field extraction is rule-based (extractReport), never presented as AI — user forbade pretending AI is connected.
+- Docker builds with NITRO_PRESET=node-server so the image runs on plain Node.

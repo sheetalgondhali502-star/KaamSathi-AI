@@ -27,3 +27,11 @@ npm run dev
 - TypeScript
 - React
 - Tailwind CSS
+
+## KaamSathi AI – run with Docker
+
+```bash
+docker build -t kaamsathi-ai .
+docker run -p 3000:3000 kaamsathi-ai
+```
+Open http://localhost:3000. No API keys or paid services are required: voice uses the browser's built-in speech recognition (best in Chrome/Edge), report details are extracted with keyword rules, and reports are stored in the browser's local storage.
